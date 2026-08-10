@@ -42,12 +42,19 @@ FROM ubuntu:24.04 AS runtime
 ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgomp1 \
     libvulkan1 \
     mesa-vulkan-drivers \
     vulkan-tools \
  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /src/build/bin/ /opt/llama/bin/
+
+RUN for binary in /opt/llama/bin/llama-server /opt/llama/bin/llama-bench; do \
+      echo "Checking ${binary}"; \
+      ldd "${binary}"; \
+      ! ldd "${binary}" | grep -q "not found"; \
+    done
 
 ENV PATH="/opt/llama/bin:${PATH}"
 ENV LD_LIBRARY_PATH="/opt/llama/bin"
