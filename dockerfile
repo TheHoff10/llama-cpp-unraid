@@ -11,10 +11,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     cmake \
     git \
+    glslang-tools \
     glslc \
     libvulkan-dev \
     ninja-build \
     pkg-config \
+    spirv-headers \
+    spirv-tools \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
