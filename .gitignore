@@ -1,0 +1,5 @@
+.DS_Store
+.env
+*.gguf
+models/
+.CLAUDE.md
