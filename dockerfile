@@ -34,7 +34,8 @@ RUN cmake -S . -B build -G Ninja \
     -DGGML_NATIVE=ON \
     -DGGML_VULKAN=ON \
     -DLLAMA_BUILD_TESTS=OFF \
- && cmake --build build --parallel "$(nproc)"
+ && cmake --build build --parallel "$(nproc)" \
+ && cmake --install build --prefix /opt/llama
 
 
 FROM ubuntu:24.04 AS runtime
@@ -48,7 +49,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     vulkan-tools \
  && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /src/build/bin/ /opt/llama/bin/
+COPY --from=builder /opt/llama/ /opt/llama/
 
 RUN for binary in /opt/llama/bin/llama-server /opt/llama/bin/llama-bench; do \
       echo "Checking ${binary}"; \
@@ -57,7 +58,7 @@ RUN for binary in /opt/llama/bin/llama-server /opt/llama/bin/llama-bench; do \
     done
 
 ENV PATH="/opt/llama/bin:${PATH}"
-ENV LD_LIBRARY_PATH="/opt/llama/bin"
+ENV LD_LIBRARY_PATH="/opt/llama/lib"
 
 EXPOSE 8090
 
