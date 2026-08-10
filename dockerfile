@@ -1,9 +1,10 @@
 # syntax=docker/dockerfile:1
 
-# Build this image ON THE UNRAID HOST so GGML_NATIVE targets the
-# Intel Core Ultra 7 255H rather than the Mac or a GitHub Actions runner.
-FROM debian:bookworm AS builder
+# Build on the Unraid host so GGML_NATIVE targets the actual
+# Intel Core Ultra 7 255H rather than a Mac or GitHub Actions runner.
+FROM ubuntu:24.04 AS builder
 
+ARG DEBIAN_FRONTEND=noninteractive
 ARG LLAMA_CPP_REF=master
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -25,8 +26,9 @@ WORKDIR /src
 RUN git clone https://github.com/ggml-org/llama.cpp.git . \
  && git checkout "${LLAMA_CPP_REF}"
 
-# Native x86 CPU optimization + Vulkan for the Intel Arc 140T iGPU.
-# No Intel NPU build flag: llama.cpp does not use the NPU usefully for GGUF serving.
+# Native CPU build for the Core Ultra 7 255H plus Vulkan for its Arc 140T iGPU.
+# The Intel NPU is deliberately not targeted; it is not a practical llama.cpp
+# GGUF-serving backend.
 RUN cmake -S . -B build -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DGGML_NATIVE=ON \
@@ -35,7 +37,9 @@ RUN cmake -S . -B build -G Ninja \
  && cmake --build build --parallel "$(nproc)"
 
 
-FROM debian:bookworm-slim AS runtime
+FROM ubuntu:24.04 AS runtime
+
+ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libvulkan1 \
