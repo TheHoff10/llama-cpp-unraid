@@ -51,14 +51,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=builder /opt/llama/ /opt/llama/
 
+RUN echo "/opt/llama/lib" > /etc/ld.so.conf.d/llama.conf \
+ && ldconfig
+
+ENV PATH="/opt/llama/bin:${PATH}"
+ENV LD_LIBRARY_PATH="/opt/llama/lib"
+
 RUN for binary in /opt/llama/bin/llama-server /opt/llama/bin/llama-bench; do \
       echo "Checking ${binary}"; \
       ldd "${binary}"; \
       ! ldd "${binary}" | grep -q "not found"; \
     done
-
-ENV PATH="/opt/llama/bin:${PATH}"
-ENV LD_LIBRARY_PATH="/opt/llama/lib"
 
 EXPOSE 8090
 
