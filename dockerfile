@@ -57,11 +57,9 @@ RUN echo "/opt/llama/lib" > /etc/ld.so.conf.d/llama.conf \
 ENV PATH="/opt/llama/bin:${PATH}"
 ENV LD_LIBRARY_PATH="/opt/llama/lib"
 
-RUN for binary in /opt/llama/bin/llama-server /opt/llama/bin/llama-bench; do \
-      echo "Checking ${binary}"; \
-      ldd "${binary}"; \
-      ! ldd "${binary}" | grep -q "not found"; \
-    done
+# Smoke-test the actual dynamic loader and both binaries.
+RUN LD_LIBRARY_PATH=/opt/llama/lib /opt/llama/bin/llama-server --help >/dev/null \
+ && LD_LIBRARY_PATH=/opt/llama/lib /opt/llama/bin/llama-bench --help >/dev/null
 
 EXPOSE 8090
 
